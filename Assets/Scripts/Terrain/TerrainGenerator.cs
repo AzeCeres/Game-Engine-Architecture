@@ -8,6 +8,10 @@ public class TerrainGenerator : MonoBehaviour
     private MeshFilter _meshFilter;
     private Mesh       _terrainMesh;
 	private Vector3[] _vertices;
+    public Vector3[] getNormals()
+    {
+        return _terrainMesh.normals;
+    }
     public Vector3[] getVerticies()
     {
         return _vertices;
@@ -22,6 +26,9 @@ public class TerrainGenerator : MonoBehaviour
 	[SerializeField]private float strength = 0.3f;
     [SerializeField]private float strength2 = 1f;
     [SerializeField]private float strength3 = 3f;
+
+
+    [Header("Gizmos")] [SerializeField] private bool displayGizmos;
     private void Awake()
     {
         _meshFilter = GetComponent<MeshFilter>();
@@ -80,6 +87,7 @@ public class TerrainGenerator : MonoBehaviour
     }
     private void OnDrawGizmos() // too many verts
     {
+        if (!displayGizmos) return;
         if (_vertices == null) return;
         if (_vertices.Length == 0 ) return;
         int x = 0, z = 0;

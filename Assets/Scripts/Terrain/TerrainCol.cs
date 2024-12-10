@@ -7,52 +7,78 @@ using Random = UnityEngine.Random;
 public class TerrainCol : MonoBehaviour // short for TerrainCollider, which couldn't be used because of a built-in class
 {
     private TerrainGenerator _terrain;
-    
+    [Header("Gizmos")] [SerializeField] private bool displayGizmos;
     private void Awake()
     {
         _terrain = GetComponent<TerrainGenerator>();
     }
     public float CheckHeightAtPosition(Vector3 position)
     {
-        var tempPos = position - transform.position; // centres the positions to 0,0,0
-        var size = _terrain.GetSize();
-        tempPos.x = Math.Clamp(tempPos.x, 0, size.x-1);
-        tempPos.z = Math.Clamp(tempPos.z, 0, size.y-1);
-        var centeredPos = new Vector3Int((int)tempPos.x, 0, (int)tempPos.z);
-
+        var centeredPos = CenterPosition(position);
+        var tempPos       = position - transform.position;
+        
         return InterpolateHeightAtPoint(tempPos);
         //return CheckHeightAtVertex(centeredPos);
     }
-    public float CheckHeightAtVertex(Vector3Int position)
+
+    public bool CheckBounds(Vector3 position)
+    {
+        var tempPos = position - transform.position;
+        var size = _terrain.GetSize();
+        var TOLERANCE = 0.05;
+        var result = (Math.Abs(tempPos.x - Math.Clamp(tempPos.x, 0, size.x - 1)) < TOLERANCE || Math.Abs(tempPos.z - Math.Clamp(tempPos.z, 0, size.y - 1)) < TOLERANCE); // tolerance to account for floating point precision errors. 
+        return result;
+    }
+    public Vector3 CheckNormalsAtPosition(Vector3 position)
+    {
+        return CheckNormalsAtVertex(CenterPosition(position));
+    }
+    private Vector3Int CenterPosition(Vector3 position)
+    {
+        var tempPos = position - transform.position; // centres the positions to 0,0,0
+        var size = _terrain.GetSize();
+        tempPos.x = Math.Clamp(tempPos.x, 0, size.x - 1);
+        tempPos.z = Math.Clamp(tempPos.z, 0, size.y - 1);
+        var centeredPos = new Vector3Int((int)tempPos.x, (int)tempPos.y, (int)tempPos.z);
+        return centeredPos;
+    }
+
+    public Vector3 CheckNormalsAtVertex(Vector3Int position)
+    {
+        var size = _terrain.GetSize();
+        var normal = _terrain.getNormals()[(int)position.z * size.x + position.x + position.z]; // truncates to nearest vertex normal
+        return normal;
+    }
+    private float CheckHeightAtVertex(Vector3Int position)
     {
         var size = _terrain.GetSize();
         var vertex = _terrain.getVerticies()[(int)position.z * size.x + position.x + position.z]; // truncates to nearest vertex
         return vertex.y;
     }
     // Function to interpolate the height at a specified point using barycentric coordinates
-    float InterpolateHeightAtPoint(Vector3 position)
+    private float InterpolateHeightAtPoint(Vector3 position)
     {
         // Convert texture coordinates to pixel coordinates
-        int vertexX = (int)position.x;
-        int vertexZ = (int)position.z;
-        // Determine the three pixels that form a triangle around the given coordinates
-        Vector2Int vertex1 = new Vector2Int(vertexX + 0, vertexZ + 0);
-        Vector2Int vertex2 = new Vector2Int(vertexX + 1, vertexZ + 0);
-        Vector2Int vertex3 = new Vector2Int(vertexX + 0, vertexZ + 1);
-        Vector2Int vertex4 = new Vector2Int(vertexX + 1, vertexZ + 1);
+        var vertexX = (int)position.x;
+        var vertexZ = (int)position.z;
+        // Determine the three vertexes that form a triangle around the given coordinates
+        var vertex1 = new Vector2Int(vertexX + 0, vertexZ + 0);
+        var vertex2 = new Vector2Int(vertexX + 1, vertexZ + 0);
+        var vertex3 = new Vector2Int(vertexX + 0, vertexZ + 1);
+        var vertex4 = new Vector2Int(vertexX + 1, vertexZ + 1);
     
         // Calculate the barycentric coordinates of the point within the triangle
-        Vector2 point = new Vector2(position.x, position.z);
-        Vector3 barycentric1 = calculateBarycentricCoordinates(point, vertex1, vertex3, vertex2);
-        Vector3 barycentric2 = calculateBarycentricCoordinates(point, vertex3, vertex2, vertex4);
+        var point = new Vector2(position.x, position.z);
+        var barycentric1 = CalculateBarycentricCoordinates(point, vertex1, vertex3, vertex2);
+        var barycentric2 = CalculateBarycentricCoordinates(point, vertex3, vertex2, vertex4);
         print(barycentric1);
         print(barycentric2);
     
         // Retrieve the heights of the three pixels
-        float height1 = CheckHeightAtVertex(new Vector3Int(vertex1.x,0, vertex1.y));
-        float height2 = CheckHeightAtVertex(new Vector3Int(vertex2.x,0, vertex2.y));
-        float height3 = CheckHeightAtVertex(new Vector3Int(vertex3.x,0, vertex3.y));
-        float height4 = CheckHeightAtVertex(new Vector3Int(vertex4.x,0, vertex4.y));
+        var height1 = CheckHeightAtVertex(new Vector3Int(vertex1.x,0, vertex1.y));
+        var height2 = CheckHeightAtVertex(new Vector3Int(vertex2.x,0, vertex2.y));
+        var height3 = CheckHeightAtVertex(new Vector3Int(vertex3.x,0, vertex3.y));
+        var height4 = CheckHeightAtVertex(new Vector3Int(vertex4.x,0, vertex4.y));
     
         // Interpolate the height using barycentric coordinates
         float interpolatedHeight;
@@ -68,7 +94,7 @@ public class TerrainCol : MonoBehaviour // short for TerrainCollider, which coul
     }
     
     // Function to calculate barycentric coordinates of a point within a triangle
-    Vector3 calculateBarycentricCoordinates(Vector2 point, Vector2Int p1, Vector2Int p2, Vector2Int p3)
+    private static Vector3 CalculateBarycentricCoordinates(Vector2 point, Vector2Int p1, Vector2Int p2, Vector2Int p3)
     {
         // Precompute vectors
         Vector2 v0 = p3 - p1;
@@ -77,24 +103,24 @@ public class TerrainCol : MonoBehaviour // short for TerrainCollider, which coul
     
         // Compute dot products
         
-        float dot00 = Vector2.Dot(v0, v0);
-        float dot01 = Vector2.Dot(v0, v1);
-        float dot02 = Vector2.Dot(v0, v2);
-        float dot11 = Vector2.Dot(v1, v1);
-        float dot12 = Vector2.Dot(v1, v2);
+        var dot00 = Vector2.Dot(v0, v0);
+        var dot01 = Vector2.Dot(v0, v1);
+        var dot02 = Vector2.Dot(v0, v2);
+        var dot11 = Vector2.Dot(v1, v1);
+        var dot12 = Vector2.Dot(v1, v2);
     
         // Compute determinant
-        float denom = dot00 * dot11 - dot01 * dot01;
+        var denom = dot00 * dot11 - dot01 * dot01;
     
         // Check if the triangle is degenerate
         if (denom == 0)
             return new Vector3(0.0f, 0.0f, 0.0f); // Return default barycentric coordinates
     
         // Compute barycentric coordinates
-        float invDenom = 1.0f / denom;
-        float u = (dot11 * dot02 - dot01 * dot12) * invDenom;
-        float v = (dot00 * dot12 - dot01 * dot02) * invDenom;
-        float w = 1.0f - u - v;
+        var invDenom = 1.0f / denom;
+        var u = (dot11 * dot02 - dot01 * dot12) * invDenom;
+        var v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+        var w = 1.0f - u - v;
     
         return new Vector3(u, v, w);
     }
@@ -103,6 +129,7 @@ public class TerrainCol : MonoBehaviour // short for TerrainCollider, which coul
     private Vector3 prevPos = new Vector3(0, 0, 0);
     private void OnDrawGizmos()
     {
+        if (!displayGizmos) return;
         if (_terrain == null)
         {
             return;
@@ -114,9 +141,11 @@ public class TerrainCol : MonoBehaviour // short for TerrainCollider, which coul
         var size = _terrain.GetSize();
         for (int i = 0; i < gizmosPos.Length; i++)
         {
-            if (gizmosPos[i].Equals(new Vector3()) || !transform.position.Equals(prevPos))
+            var position = transform.position;
+            if (gizmosPos[i].Equals(new Vector3()) || !position.Equals(prevPos))
             {
-                gizmosPos[i] = new Vector3(Random.Range(transform.position.x, size.x + transform.position.x), 0, Random.Range(transform.position.z, size.y + transform.position.x));
+                
+                gizmosPos[i] = new Vector3(Random.Range(position.x, size.x + position.x), 0, Random.Range(position.z, size.y + position.x));
                 gizmosPos[i].y = CheckHeightAtPosition(gizmosPos[i]);
             }
             Gizmos.DrawSphere(gizmosPos[i], .1f);
