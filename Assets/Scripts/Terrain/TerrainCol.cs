@@ -16,7 +16,8 @@ public class TerrainCol : MonoBehaviour // short for TerrainCollider, which coul
     {
         var centeredPos = CenterPosition(position);
         var tempPos       = position - transform.position;
-        
+
+        //if (!CheckBounds(position)) return float.MinValue; 
         return InterpolateHeightAtPoint(tempPos);
         //return CheckHeightAtVertex(centeredPos);
     }
@@ -58,9 +59,11 @@ public class TerrainCol : MonoBehaviour // short for TerrainCollider, which coul
     // Function to interpolate the height at a specified point using barycentric coordinates
     private float InterpolateHeightAtPoint(Vector3 position)
     {
+        var size = _terrain.GetSize();
         // Convert texture coordinates to pixel coordinates
-        var vertexX = (int)position.x;
-        var vertexZ = (int)position.z;
+        var vertexX = Math.Clamp((int)position.x, 0, size.x - 1);
+        var vertexZ = Math.Clamp((int)position.z, 0, size.y - 1);
+
         // Determine the three vertexes that form a triangle around the given coordinates
         var vertex1 = new Vector2Int(vertexX + 0, vertexZ + 0);
         var vertex2 = new Vector2Int(vertexX + 1, vertexZ + 0);
@@ -69,8 +72,8 @@ public class TerrainCol : MonoBehaviour // short for TerrainCollider, which coul
     
         // Calculate the barycentric coordinates of the point within the triangle
         var point = new Vector2(position.x, position.z);
-        var barycentric1 = CalculateBarycentricCoordinates(point, vertex1, vertex3, vertex2);
-        var barycentric2 = CalculateBarycentricCoordinates(point, vertex3, vertex2, vertex4);
+        var barycentric1 = CalculateBarycentricCoordinates(point, vertex1, vertex2, vertex3);
+        var barycentric2 = CalculateBarycentricCoordinates(point, vertex2, vertex3, vertex4);
         print(barycentric1);
         print(barycentric2);
     
@@ -84,11 +87,11 @@ public class TerrainCol : MonoBehaviour // short for TerrainCollider, which coul
         float interpolatedHeight;
         if (barycentric1 is { x: > 0, y: > 0, z: > 0 })
         { 
-            interpolatedHeight = height1 * barycentric1.x + height3 * barycentric1.y + height2 * barycentric1.z;
+            interpolatedHeight = height1 * barycentric1.x + height2 * barycentric1.y + height3 * barycentric1.z;
         }
         else
         {
-            interpolatedHeight = height3 * barycentric2.x + height2 * barycentric2.y + height4 * barycentric2.z;
+            interpolatedHeight = height2 * barycentric2.x + height3 * barycentric2.y + height4 * barycentric2.z;
         }
         return interpolatedHeight;
     }

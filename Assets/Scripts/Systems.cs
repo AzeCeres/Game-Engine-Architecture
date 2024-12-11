@@ -121,8 +121,9 @@ public class PhysicsSystem : System_
                     pos.X[nr] += (mov.XVelocity[nr] / simSteps)*Time.deltaTime;
                     pos.Y[nr] += (mov.YVelocity[nr] / simSteps)*Time.deltaTime;
                     pos.Z[nr] += (mov.ZVelocity[nr] / simSteps)*Time.deltaTime;
+                    
                     var posVec = new Vector3(pos.X[nr], pos.Y[nr]-phys.Radius[nr], pos.Z[nr]);
-                    if(!_terrainCol.CheckBounds(posVec)) continue; //skip further checks if it's out of bounds for the terrain.
+                    //if(!_terrainCol.CheckBounds(posVec)) continue; //skip further checks if it's out of bounds for the terrain.
 
                     var heightAtPosition = _terrainCol.CheckHeightAtPosition(posVec);
                     if (heightAtPosition < posVec.y)
@@ -147,6 +148,8 @@ public class PhysicsSystem : System_
                         mov.ZVelocity[nr] += shortenedVec.z;
                     }
                 }
+                mov.XVelocity[nr] -= ((mov.XVelocity[nr]) * Time.deltaTime)/1.02f;
+                mov.ZVelocity[nr] -= ((mov.ZVelocity[nr]) * Time.deltaTime)/1.02f;
             }
         }
     }

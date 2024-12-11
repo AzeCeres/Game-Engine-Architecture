@@ -15,8 +15,8 @@ public class ECSBalls : MonoBehaviour
     private ComponentManager<PhysicsBallComponent> _physManager   = new ComponentManager<PhysicsBallComponent>();
 
     [Header("Balls")] 
-    [SerializeField][Range(1,  10)] private int numEntities = 1;
-    [SerializeField][Range(1,1000)] private int numBalls    = 100;
+    [SerializeField][Range(1,  10)] private int numEntities = 2;
+    [SerializeField][Range(1, 200)] private int numBalls    = 100;
     [SerializeField] private Vector2 radRange = new Vector2(0.1f, 1);
     [Header("Position")]
     [SerializeField][Tooltip("minX-maxX")] private Vector2 spawnBoundsX;
@@ -65,14 +65,14 @@ public class ECSBalls : MonoBehaviour
                 yPositions[nr] = Random.Range(spawnBoundsY.x, spawnBoundsY.y);
                 zPositions[nr] = Random.Range(spawnBoundsZ.x, spawnBoundsZ.y);
                 radius[nr]     = Random.Range(radRange.x, radRange.y);
-                shape[nr]  = GizmoRenderComponent.Shape.Sphere;
-                xVelocity[nr] = Mathf.Sin(nr) / 2;
-                yVelocity[nr] = -gravity;
-                zVelocity[nr] = Mathf.Cos(nr) / 2;
-                dirSize[nr]  = new Vector3(radius[e], 0, 0);
-                toRender[nr] = true;
-                respawns[nr] = true;
-                simSteps[nr] = simulationSteps;
+                shape[nr]      = GizmoRenderComponent.Shape.Sphere;
+                xVelocity[nr]  = Mathf.Sin(nr) / 2;
+                yVelocity[nr]  = -gravity;
+                zVelocity[nr]  = Mathf.Cos(nr) / 2;
+                dirSize[nr]    = new Vector3(radius[e], 0, 0);
+                toRender[nr]   = true;
+                respawns[nr]   = true;
+                simSteps[nr]   = simulationSteps;
             }
 
             // Add components to the entity
@@ -94,20 +94,20 @@ public class ECSBalls : MonoBehaviour
     private void OnDrawGizmos() // a way to more easily use DOD rendering, but gives up on z order for other objects. aka it will be drawn in front of all other objects
     {
         if (_entities.Count==0) return;
-        for (int i = 0; i < _entities.Count; i++)
+        for (var e = 0; e < _entities.Count; e++)
         {
-            if (!_positionManager.HasComponent(_entities[i].Id)) continue;
-            if (!_renderManager.HasComponent(_entities[i].Id))   continue;
-            var position = _positionManager.GetComponent(_entities[i].Id);
-            var render   = _renderManager  .GetComponent(_entities[i].Id);
-            for (var j = 0; j < render.Size; j++)
+            if (!_positionManager.HasComponent(_entities[e].Id)) continue;
+            if (!_renderManager.HasComponent(_entities[e].Id))   continue;
+            var position = _positionManager.GetComponent(_entities[e].Id);
+            var render   = _renderManager  .GetComponent(_entities[e].Id);
+            for (var nr = 0; nr < render.Size; nr++)
             {
-                if (!render.IsRendered[j]) continue;
-                var posVec = new Vector3(position.X[j], position.Y[j], position.Z[j]);
+                if (!render.IsRendered[nr]) continue;
+                var posVec = new Vector3(position.X[nr], position.Y[nr], position.Z[nr]);
                 
-                if (render.GizmoShape[j] == GizmoRenderComponent.Shape.Sphere)
+                if (render.GizmoShape[nr] == GizmoRenderComponent.Shape.Sphere)
                 {
-                    Gizmos.DrawSphere(posVec, render.DirSize[j].x);
+                    Gizmos.DrawSphere(posVec, render.DirSize[nr].x);
                 }
                 else
                 {

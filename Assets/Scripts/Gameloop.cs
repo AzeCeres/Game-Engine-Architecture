@@ -51,12 +51,12 @@ public class Gameloop : MonoBehaviour
     private void CreateParticles()
     {
         // Create and add entities
-        for (var i = 0; i < numberOfEntites; i++)
+        for (var e = 0; e < numberOfEntites; e++)
         {
             var entity = new Entity { Id = curID };
             curID++;
             entities.Add(entity);
-            GameObject entityGameObject = new GameObject(name: "entity" + i); // made to section of the 
+            GameObject entityGameObject = new GameObject(name: "entity" + e); // made to section of the 
             // Add components to the entity
             var XPositions = new float[numberOfParticlesPerEntity];
             var YPositions = new float[numberOfParticlesPerEntity];
@@ -68,17 +68,17 @@ public class Gameloop : MonoBehaviour
             var isLive = new bool [numberOfParticlesPerEntity];
             var respawns = new bool [numberOfParticlesPerEntity];
 
-            for (int j = 0; j < numberOfParticlesPerEntity; j++)
+            for (var nr = 0; nr < numberOfParticlesPerEntity; nr++)
             {
-                XPositions[j] = Random.Range(spawnBoundsX.x, spawnBoundsX.y);
-                YPositions[j] = Random.Range(spawnBoundsY.x, spawnBoundsY.y);
-                ZPositions[j] = Random.Range(spawnBoundsZ.x, spawnBoundsZ.y);
-                XVelocity[j] = Mathf.Sin(j) / 2;
-                YVelocity[j] = -gravity;
-                ZVelocity[j] = Mathf.Cos(j) / 2;
-                timer[j] = Random.Range(timeToLive.x, timeToLive.y);
-                isLive[j] = true;
-                respawns[j] = true;
+                XPositions[nr] = Random.Range(spawnBoundsX.x, spawnBoundsX.y);
+                YPositions[nr] = Random.Range(spawnBoundsY.x, spawnBoundsY.y);
+                ZPositions[nr] = Random.Range(spawnBoundsZ.x, spawnBoundsZ.y);
+                XVelocity[nr] = Mathf.Sin(nr) / 2;
+                YVelocity[nr] = -gravity;
+                ZVelocity[nr] = Mathf.Cos(nr) / 2;
+                timer[nr] = Random.Range(timeToLive.x, timeToLive.y);
+                isLive[nr] = true;
+                respawns[nr] = true;
             }
             // Add components to the entity
             positionManager.AddComponent(entity.Id, new PositionComponent { X = XPositions, Y = YPositions, Z = ZPositions, Size = XPositions.Length });
@@ -88,13 +88,13 @@ public class Gameloop : MonoBehaviour
             var gameObjects = new GameObject[numberOfParticlesPerEntity];
             //Material[]   materials   = new Material  [numberOfParticlesPerEntity];
             //Mesh[]       meshes      = new Mesh      [numberOfParticlesPerEntity];
-            for (var j = 0; j < numberOfParticlesPerEntity; j++)
+            for (var nr = 0; nr < numberOfParticlesPerEntity; nr++)
             {
                 var tempMesh = mesh;
                 var tempMaterial = material;
                 var tempGameObject = new GameObject
                 {
-                    name = "entity" + i.ToString() + "renderComponent" + j.ToString(),
+                    name = "entity" + e.ToString() + "renderComponent" + nr.ToString(),
                     transform = { parent = entityGameObject.transform }
                 };
                 tempGameObject.AddComponent<MeshFilter>();
@@ -108,7 +108,7 @@ public class Gameloop : MonoBehaviour
 
                 //meshes[j]      = tempMesh;
                 //materials[j]   = tempMaterial;
-                gameObjects[j] = tempGameObject;
+                gameObjects[nr] = tempGameObject;
             }
             renderManager.AddComponent(entity.Id, new OldRenderComponent { GameObjects = gameObjects, Size = gameObjects.Length });
             //int[] health = new[] { 5, 2, 10, 3, 5, 3, 5, 6, 8, 7, 3 };

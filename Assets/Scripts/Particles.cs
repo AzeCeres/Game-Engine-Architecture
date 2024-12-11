@@ -29,7 +29,7 @@ public class Particles : MonoBehaviour
 {
     [Header("Particles")]
     [SerializeField][Range(0,5000)] private int   numberOfParticles;
-    [SerializeField][Range(0,100)]  private float gravity;
+    [SerializeField][Range(0, 100)] private float gravity;
     [Header("Visuals")]
     [SerializeField] private Material particleMaterial;
     [SerializeField] private Mesh     particleMesh;
@@ -135,7 +135,7 @@ public class Particles : MonoBehaviour
         for (int i = 0; i < particlesIn.Size; i++)
         {
             if (!particlesIn.IsLive[i]) continue;
-            var progress = (particlesIn.Lifetime[i].y - particlesIn.Lifetime[i].x)/particlesIn.Lifetime[i].y; // 0 when it has just started, 1 when finished // todo find equivalent way without division as it is slow
+            var progress = (particlesIn.Lifetime[i].y - particlesIn.Lifetime[i].x)/particlesIn.Lifetime[i].y; // 0 when it has just started, 1 when finished
             var curScale = particlesIn.Particles[i].transform.localScale.x; // assumes same scale transforms on all axis.
             var newScale = Mathf.Lerp(curScale, endScale, progress);
             particlesIn.Particles[i].transform.localScale = new Vector3(newScale, newScale, newScale);
